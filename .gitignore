@@ -1,0 +1,17 @@
+# Node.js
+node_modules/
+
+# Compiled TypeScript
+dist/
+
+# Logs
+logs/
+*.log
+
+# Visual Studio Code
+.vscode/
+
+# Editor-specific files
+.idea/
+.DS_Store
+
