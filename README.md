@@ -28,3 +28,10 @@ In this base example, the saga event handler `main.ts` is also executing the han
 - Ensure the saga event handler can scale itself e.g. scalable serverless, pool of handlers in same service
 - Publish commands to corresponding handle queue(s) and have a pool of workers to handle the events
   - The important thing is that the saga success / fail events are published correctly from somewhere
+
+
+## Planned updates
+- [ ] Add Zod schemas to validate rollbacks
+- [ ] Add optional input mapping logic to saga steps -
+  - e.g. map previous `{ id }` to `{ orderId }` before passing to `TakePayment` step
+  - Currently the `CreateOrder` step explicitly returns `{ orderId }` for easy consumption by following step
