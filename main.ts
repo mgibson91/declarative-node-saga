@@ -4,6 +4,8 @@ import { database } from "./database";
 import { Command } from "./command/contracts";
 import { getStepHandler } from "./command/handlers/step";
 import { getRollbackHandler } from "./command/handlers/rollback";
+import { executeStep } from "./execute-step";
+import { executeRollbackStep } from "./execute-rollback-step";
 
 interface SagaStep {
   id: string;
@@ -129,13 +131,14 @@ async function handleStepComplete(event: SagaEvent) {
 
   const handler = getStepHandler(nextStep.handler);
 
-  // Execute handler
-  await handler({
+  // Async execution of next step - this could be a published command to queue
+  executeStep({
     sagaInput: saga.input,
     stepInput: data,
     sagaId: saga.id,
     stepId: nextStep.id,
     metadata: nextStep.metadata,
+    handler,
   });
 }
 
@@ -203,34 +206,20 @@ async function handleRollback(event: SagaEvent) {
     throw new Error(message);
   }
 
-  // Execute rollback
-  try {
-    const rollbackHandler = getRollbackHandler(rollbackOperation.command);
-
-    const start = Date.now();
-    logger.info(
-      { sagaId, stepId: previousStep.id, command: rollbackOperation.command },
-      "Executing rollback step"
-    );
-
-    await rollbackHandler({
-      payload: rollbackOperation.payload,
-      sagaId,
-      stepId,
-    });
-
-    logger.info({ durationMs: Date.now() - start }, "Executed rollback step");
-
-    Queue.publishSagaRollback({
-      sagaId,
-      stepId: previousStep.id,
-    });
-  } catch (error) {
-    logger.error(
-      { sagaId, stepId: previousStep.id, error },
-      "CRITICAL - Rollback stopped as step failed. Intervention required"
-    );
+  const rollbackHandler = getRollbackHandler(rollbackOperation.command);
+  if (!rollbackHandler) {
+    const message = "CRITICAL - Rollback handler not found";
+    logger.error({ sagaId, stepId }, message);
+    throw new Error(message);
   }
+
+  // Async execution of next step - this could be a published command to queue
+  executeRollbackStep({
+    handler: rollbackHandler,
+    payload: rollbackOperation.payload,
+    sagaId,
+    stepId: previousStep.id,
+  });
 }
 
 async function startSaga(saga: Saga, input: unknown) {
@@ -246,8 +235,9 @@ async function startSaga(saga: Saga, input: unknown) {
 
   const handler = getStepHandler(firstStep.handler);
 
-  // Execute handler
-  await handler({
+  // Async execution of next step - this could be a published command to queue
+  executeStep({
+    handler,
     sagaInput: saga.input,
     stepInput: saga.input,
     sagaId: saga.id,

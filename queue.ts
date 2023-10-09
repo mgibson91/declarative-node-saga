@@ -1,27 +1,22 @@
-// Create a global reference to the EventEmitter instance
 import { EventEmitter } from "events";
 import { getLogger } from "./logger";
 
 const eventEmitter = new EventEmitter();
 
-// Function to publish an event
 function publishSagaStepComplete(eventData: any) {
-  getLogger("queue").info({ eventData }, "Publishing saga event");
-  eventEmitter.emit("saga-event", eventData);
+  getLogger("queue").info({ eventData }, "Publishing saga step complete");
+  eventEmitter.emit("saga-step-complete", eventData);
 }
 
-// Function to publish an event
 function publishSagaRollback(eventData: any) {
-  getLogger("queue").info({ eventData }, "Publishing saga error");
+  getLogger("queue").info({ eventData }, "Publishing saga rollback");
   eventEmitter.emit("saga-rollback", eventData);
 }
 
-// Function to register event listeners
 function registerSagaStepCompleteListener(callback: (eventData: any) => void) {
-  eventEmitter.on("saga-event", callback);
+  eventEmitter.on("saga-step-complete", callback);
 }
 
-// Function to register event listeners
 function registerSagaRollbackListener(callback: (eventData: any) => void) {
   eventEmitter.on("saga-rollback", callback);
 }

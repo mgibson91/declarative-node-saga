@@ -4,12 +4,17 @@
 - Declarative sequence of async steps
 - No explicit event names, inferred from saga & step IDs
 - Can be hosted in any long running context (serverless, container or VM)
+- Saga step complete & rollback handler async
 
 ### Benefits
 - Highly modular
 - Composable, reusable
 - Enforces common patterns
 - Easier to test in isolation
+
+### Usage
+- `yarn install`
+- `yarn start`
 
 ### Considerations
 - Row level locking should be used with transactions to minimise transaction overhead
